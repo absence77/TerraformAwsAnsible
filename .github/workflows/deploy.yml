@@ -54,8 +54,8 @@ jobs:
 
       # Шаг для удаления ресурсов (например, при ручном запуске через workflow_dispatch)
       - name: Terraform Destroy
-        if: ${{ github.event_name == 'workflow_dispatch' }}  # Запускать только при ручном запуске
         run: terraform destroy -auto-approve
         env:
           TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        if: ${{ github.event_name == 'workflow_dispatch' }}  # Запускать только при ручном запуске

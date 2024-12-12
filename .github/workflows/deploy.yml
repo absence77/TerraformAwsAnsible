@@ -3,10 +3,10 @@ name: Terraform Deployment
 on:
   push:
     branches:
-      - main  # Запускать действие на изменения в ветке main
+      - main
   pull_request:
     branches:
-      - main  # Запускать действие на PR в ветке main
+      - main
   workflow_dispatch:  # Позволяет вручную запускать процесс удаления
 
 jobs:
@@ -31,24 +31,21 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.6.0  # Вы можете указать нужную версию Terraform
+          terraform_version: 1.6.0
 
       # Инициализация Terraform
       - name: Terraform Init
         run: terraform init
 
-      # Проверка изменений (plan)
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan
+      # Импорт существующих ресурсов (по аналогии с terraform import)
+      - name: Terraform Import
+        run: |
+          terraform import aws_instance.example i-1234567890abcdef0
+          terraform import aws_s3_bucket.example my-bucket-name
 
-      # Применение изменений (apply)
-      - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
+      # Удаление ресурсов (destroy)
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
         env:
           TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-
-  destroy:
-    name: Destroy Resources
-    runs-on: ubuntu-l

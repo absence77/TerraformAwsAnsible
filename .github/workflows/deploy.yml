@@ -48,9 +48,6 @@ jobs:
           TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      # Вывод информации (например, IP EC2)
-      - name: Output EC2 public IP
-        run: echo "EC2 Public IP: ${{ steps.terraform.outputs.ec2_public_ip }}"
 
   destroy:
     name: Destroy Resources

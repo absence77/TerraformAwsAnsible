@@ -1,64 +1,52 @@
-name: Deploy Infrastructure
+name: Terraform Deployment
 
 on:
   push:
     branches:
-      - main
+      - main  # Запускать действие на изменения в ветке main
+  pull_request:
+    branches:
+      - main  # Запускать действие на PR в ветке main
 
 jobs:
-  deploy:
+  terraform:
+    name: Run Terraform
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
-      - name: Checkout repository
+      # Checkout кода
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Setup Terraform
-      - name: Setup Terraform
+      # Настройка AWS CLI
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # Установка Terraform
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.5.0
+          terraform_version: 1.6.0  # Вы можете указать нужную версию Terraform
 
-      # Step 3: Initialize Terraform
-      - name: Initialize Terraform
-        working-directory: terraform/
+      # Инициализация Terraform
+      - name: Terraform Init
         run: terraform init
 
-      # Step 4: Apply Terraform
-      - name: Apply Terraform
-        working-directory: terraform/
+      # Проверка изменений (plan)
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      # Применение изменений (apply)
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: terraform apply -auto-approve
+          TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      # Step 5: Extract EC2 DNS
-      - name: Extract EC2 DNS
-        id: terraform_output
-        working-directory: terraform/
-        run: |
-          echo "DNS=$(terraform output -raw ec2_instance_dns)" >> $GITHUB_ENV
-
-      # Step 6: Install Ansible
-      - name: Install Ansible
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ansible
-
-      # Step 7: Setup SSH for Ansible
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-
-      # Step 8: Run Ansible Playbook
-      - name: Execute Ansible Playbook
-        working-directory: ansible/
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: "false"
-        run: |
-          echo "[my_servers]" > inventory.ini
-          echo "${{ env.DNS }}" >> inventory.ini
-          ansible-playbook -i inventory.ini playbook.yml
+      # Вывод информации
+      - name: Output EC2 public IP
+        run: echo "EC2 Public IP: ${{ steps.terraform.outputs.ec2_public_ip }}"

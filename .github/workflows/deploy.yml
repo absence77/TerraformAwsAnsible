@@ -1,17 +1,11 @@
-name: Terraform Deployment
+name: Terraform Destroy
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:  # Позволяет вручную запускать процесс удаления
+  workflow_dispatch:  # Дает возможность запускать процесс вручную из интерфейса GitHub Actions
 
 jobs:
-  terraform:
-    name: Run Terraform
+  terraform-destroy:
+    name: Destroy Terraform Resources
     runs-on: ubuntu-latest
 
     steps:
@@ -37,13 +31,7 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      # Импорт существующих ресурсов (по аналогии с terraform import)
-      - name: Terraform Import
-        run: |
-          terraform import aws_instance.example i-1234567890abcdef0
-          terraform import aws_s3_bucket.example my-bucket-name
-
-      # Удаление ресурсов (destroy)
+      # Удаление ресурсов
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
         env:

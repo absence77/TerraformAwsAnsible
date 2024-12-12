@@ -1,0 +1,48 @@
+- name: Install Docker and run a Python app container on EC2 instance
+  hosts: my_servers
+  become: true
+  vars:
+  #   # db_username: "{{ lookup('community.aws.aws_secretsmanager', 'db_credentials_pzjq1t06.DATABASE_USERNAME', region='us-east-1') }}"
+  #   # db_password: "{{ lookup('community.aws.aws_secretsmanager', 'db_credentials_pzjq1t06.DATABASE_PASSWORD', region='us-east-1') }}"
+    mysecret: "{{ lookup('amazon.aws.secretsmanager_secret', 'db_credentials_qw4it1c7', region='us-east-1') }}"
+    # db_password: "{{ lookup('amazon.aws.secretsmanager_secret', 'db_credentials_pzjq1t06.DATABASE_PASSWORD', region='us-east-1') }}"
+
+
+  tasks:
+    - name: Install Docker on Amazon Linux 2
+      command: amazon-linux-extras install docker
+      when: ansible_facts.os_family == "Amazon"
+
+    - name: Install Docker (if not already installed)
+      yum:
+        name: docker
+        state: present
+      when: ansible_facts.os_family != "Amazon"  # Only for non-Amazon Linux
+
+    - name: Start Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes  # Ensure Docker starts on boot
+
+    - name: Pull official Python Docker image
+      community.docker.docker_image:
+        name: python  # Docker image for Python
+        source: pull  # Pull the image from Docker Hub
+
+    - name: Run Python app container
+      community.docker.docker_container:
+        name: python_app  # Name of the container
+        image: python  # Use the official Python image
+        state: started  # Ensure the container is started
+        command: python -m http.server 8080  # Start a simple HTTP server in Python
+        published_ports:
+          - "8080:8080"  # Expose port 8080 from container to host
+        env:
+          DB_USERNAME: "{{ mysecret.DATABASE_USERNAME }}"  # Pass the db_username as environment variable
+          DB_PASSWORD: "{{ mysecret.DATABASE_PASSWORD }}"  # Pass the db_password as environment variable
+
+    # Uncomment the following lines if you need to print the database credentials
+    - name: Print database credentials
+      debug:
+        msg: "Database username: {{ mysecret.DATABASE_USERNAME }} , password: {{ mysecret.DATABASE_PASSWORD }}"

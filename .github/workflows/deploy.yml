@@ -21,6 +21,14 @@ jobs:
         with:
           terraform_version: 1.6.0  # Укажите нужную версию Terraform
 
+      # Шаг для настройки AWS
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1  # Укажите ваш регион AWS
+
       # Шаг для инициализации Terraform
       - name: Terraform Init
         run: terraform init
@@ -28,3 +36,8 @@ jobs:
       # Шаг для планирования Terraform
       - name: Terraform Plan
         run: terraform plan
+
+      # Шаг для применения изменений Terraform (если нужно)
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
+        # Вы можете удалить этот шаг, если не хотите автоматически применять изменения

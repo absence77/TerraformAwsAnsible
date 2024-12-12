@@ -3,7 +3,11 @@ name: Terraform Deployment
 on:
   push:
     branches:
-      - main  # Запускать на push в основную ветку
+      - main  # Запускать действие на изменения в ветке main
+  pull_request:
+    branches:
+      - main  # Запускать действие на PR в ветке main
+  workflow_dispatch:  # Позволяет вручную запускать процесс удаления
 
 jobs:
   terraform:
@@ -11,33 +15,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Шаг для извлечения кода из репозитория
+      # Checkout кода
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Шаг для установки Terraform
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.6.0  # Укажите нужную версию Terraform
-
-      # Шаг для настройки AWS
+      # Настройка AWS CLI
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # Укажите ваш регион AWS
+          aws-region: us-east-1
 
-      # Шаг для инициализации Terraform
+      # Установка Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0  # Вы можете указать нужную версию Terraform
+
+      # Инициализация Terraform
       - name: Terraform Init
         run: terraform init
 
-      # Шаг для планирования Terraform
+      # Проверка изменений (plan)
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan -out=tfplan
 
-      # Шаг для применения изменений Terraform (если нужно)
+      # Применение изменений (apply)
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+        env:
+          TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      # Вывод информации (например, IP EC2)
+      - name: Output EC2 public IP
+        run: echo "EC2 Public IP: ${{ steps.terraform.outputs.ec2_public_ip }}"
+
+      # Шаг для удаления ресурсов (например, при ручном запуске через workflow_dispatch)
       - name: Terraform Destroy
+        if: ${{ github.event_name == 'workflow_dispatch' }}  # Запускать только при ручном запуске
         run: terraform destroy -auto-approve
-        # Вы можете удалить этот шаг, если не хотите автоматически применять изменения
+        env:
+          TF_VAR_aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

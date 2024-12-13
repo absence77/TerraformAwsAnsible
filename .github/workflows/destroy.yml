@@ -1,12 +1,10 @@
-name: Deploy Infrastructure
+name: Destroy Infrastructure
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  destroy:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,14 +27,10 @@ jobs:
       working-directory: ./terraform
       run: terraform init
 
-    - name: Validate Terraform
+    - name: Plan Destroy
       working-directory: ./terraform
-      run: terraform validate
+      run: terraform plan -destroy -out=tfplan
 
-    - name: Plan Terraform
-      working-directory: ./terraform
-      run: terraform plan -out=tfplan
-
-    - name: Apply Terraform
+    - name: Destroy Infrastructure
       working-directory: ./terraform
       run: terraform apply -auto-approve tfplan

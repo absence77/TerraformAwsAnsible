@@ -34,3 +34,4 @@ jobs:
     - name: Destroy Infrastructure
       working-directory: ./terraform
       run: terraform apply -auto-approve tfplan
+      

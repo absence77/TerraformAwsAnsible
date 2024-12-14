@@ -19,8 +19,8 @@ resource "random_string" "secret_suffix" {
 
 # EC2 instance to host Nginx
 resource "aws_instance" "container_instance" {
-  ami           = "ami-0453ec754f44f9a4a"  # Use a suitable AMI for EC2 instance
-  instance_type = "t3.micro"               # Instance type
+  ami           = "ami-055e3d4f0bbeb5878"  # Use a suitable AMI for EC2 instance
+  instance_type = "t3.small"               # Instance type
 
   security_groups = [aws_security_group.container_sg.name]
   iam_instance_profile = aws_iam_instance_profile.container_iam_profile.name
@@ -140,7 +140,7 @@ resource "random_id" "bucket_id" {
 
 # S3 bucket for Terraform state
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "my-terraform-state-bucket"
+  bucket = "my-terraform-state-bucket-test"
   acl    = "private"
 }
 
@@ -208,14 +208,51 @@ resource "aws_iam_role_policy_attachment" "terraform_state_policy_attachment" {
   role       = aws_iam_role.container_iam_role.name
 }
 
-output "ec2_public_ip" {
+# Outputs to display after Terraform apply
+output "terraform_state_bucket_name" {
+  value = aws_s3_bucket.terraform_state.bucket
+}
+
+output "terraform_state_bucket_arn" {
+  value = aws_s3_bucket.terraform_state.arn
+}
+
+output "terraform_dynamodb_table_name" {
+  value = aws_dynamodb_table.terraform_locks.name
+}
+
+output "terraform_dynamodb_table_arn" {
+  value = aws_dynamodb_table.terraform_locks.arn
+}
+
+output "nginx_config_bucket_name" {
+  value = aws_s3_bucket.nginx_config_bucket.bucket
+}
+
+output "nginx_config_bucket_arn" {
+  value = aws_s3_bucket.nginx_config_bucket.arn
+}
+
+output "nginx_config_object_key" {
+  value = aws_s3_bucket_object.nginx_config.key
+}
+
+output "nginx_config_object_arn" {
+  value = aws_s3_bucket_object.nginx_config.arn
+}
+
+output "container_instance_public_ip" {
   value = aws_instance.container_instance.public_ip
 }
 
-output "s3_bucket_name" {
-  value = aws_s3_bucket.nginx_config_bucket.bucket
+output "container_instance_id" {
+  value = aws_instance.container_instance.id
 }
 
 output "secret_name" {
   value = aws_secretsmanager_secret.db_credentials.name
+}
+
+output "secret_arn" {
+  value = aws_secretsmanager_secret.db_credentials.arn
 }

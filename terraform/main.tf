@@ -139,6 +139,22 @@ resource "aws_s3_bucket" "nginx_config_bucket" {
   bucket = "my-config-bucket-${random_string.bucket_suffix.id}"
 }
 
+resource "aws_s3_bucket" "terraform_state" {
+  bucket = "my-terraform-state-bucket"
+  acl    = "private"
+}
+
+resource "aws_dynamodb_table" "terraform_locks" {
+  name         = "terraform-lock-table"
+  billing_mode = "PAY_PER_REQUEST"
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+}
+
+
 # Upload Nginx configuration file to S3
 resource "aws_s3_bucket_object" "nginx_config" {
   bucket = aws_s3_bucket.nginx_config_bucket.bucket

@@ -140,6 +140,7 @@ resource "aws_s3_bucket" "nginx_config_bucket" {
 }
 
 resource "aws_s3_bucket" "terraform_state" {
+  provider = aws.us_east_1
   bucket = "my-terraform-state-bucket"
   acl    = "private"
 }

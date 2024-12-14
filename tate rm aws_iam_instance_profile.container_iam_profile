@@ -1,0 +1,11 @@
+{
+    "InstanceProfile": {
+        "Path": "/",
+        "InstanceProfileName": "container_iam_profile",
+        "InstanceProfileId": "AIPA5NI5E3XMOQL5V3ZGA",
+        "Arn": "arn:aws:iam::921868492248:instance-profile/container_iam_profile",
+        "CreateDate": "2024-12-14T10:08:48+00:00",
+        "Roles": [],
+        "Tags": []
+    }
+}

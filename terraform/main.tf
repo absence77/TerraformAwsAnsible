@@ -134,6 +134,10 @@ resource "aws_secretsmanager_secret_version" "secret_version" {
   })
 }
 
+resource "random_id" "bucket_id" {
+  byte_length = 8
+}
+
 # S3 bucket for Terraform state
 resource "aws_s3_bucket" "terraform_state" {
   bucket = "my-terraform-state-bucket"

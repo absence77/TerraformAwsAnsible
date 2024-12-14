@@ -7,14 +7,14 @@ resource "random_string" "bucket_suffix" {
   length  = 8
   special = false
   upper   = false
-  numeric  = true
+  numeric = true
 }
 
 resource "random_string" "secret_suffix" {
   length  = 8
   special = false
   upper   = false
-  numeric  = true
+  numeric = true
 }
 
 # EC2 instance to host Nginx
@@ -134,16 +134,13 @@ resource "aws_secretsmanager_secret_version" "secret_version" {
   })
 }
 
-# S3 bucket for Nginx config
-resource "aws_s3_bucket" "nginx_config_bucket" {
-  bucket = "my-config-bucket-${random_string.bucket_suffix.id}"
-}
-
+# S3 bucket for Terraform state
 resource "aws_s3_bucket" "terraform_state" {
   bucket = "my-terraform-state-bucket"
   acl    = "private"
 }
 
+# DynamoDB Table for Terraform state locking
 resource "aws_dynamodb_table" "terraform_locks" {
   name         = "terraform-lock-table"
   billing_mode = "PAY_PER_REQUEST"
@@ -155,7 +152,10 @@ resource "aws_dynamodb_table" "terraform_locks" {
   }
 }
 
-
+# S3 bucket for Nginx config
+resource "aws_s3_bucket" "nginx_config_bucket" {
+  bucket = "my-config-bucket-${random_string.bucket_suffix.id}"
+}
 
 # Upload Nginx configuration file to S3
 resource "aws_s3_bucket_object" "nginx_config" {
@@ -163,6 +163,45 @@ resource "aws_s3_bucket_object" "nginx_config" {
   key    = "nginx.conf"
   source = "nginx.conf"
   acl    = "private"
+}
+
+# Attach the access policy to the role for Terraform state and locking
+resource "aws_iam_policy" "terraform_state_policy" {
+  name        = "TerraformStateAndLockPolicy"
+  description = "Allow access to S3 for Terraform state and DynamoDB for state locking"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListBucket"
+        ]
+        Effect   = "Allow"
+        Resource = [
+          "${aws_s3_bucket.terraform_state.arn}",
+          "${aws_s3_bucket.terraform_state.arn}/*"
+        ]
+      },
+      {
+        Action   = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:Query",
+          "dynamodb:DeleteItem"
+        ]
+        Effect   = "Allow"
+        Resource = aws_dynamodb_table.terraform_locks.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "terraform_state_policy_attachment" {
+  policy_arn = aws_iam_policy.terraform_state_policy.arn
+  role       = aws_iam_role.container_iam_role.name
 }
 
 output "ec2_public_ip" {

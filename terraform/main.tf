@@ -147,12 +147,14 @@ resource "aws_s3_bucket" "terraform_state" {
 resource "aws_dynamodb_table" "terraform_locks" {
   name         = "terraform-lock-table"
   billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"  # Указываем LockID как ключ
 
   attribute {
     name = "LockID"
-    type = "S"
+    type = "S"  # Тип строки (String)
   }
 }
+
 
 
 # Upload Nginx configuration file to S3

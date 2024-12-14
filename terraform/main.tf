@@ -177,3 +177,4 @@ output "s3_bucket_name" {
 output "secret_name" {
   value = aws_secretsmanager_secret.db_credentials.name
 }
+

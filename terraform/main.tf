@@ -9,7 +9,7 @@ terraform {
   backend "s3" {
     bucket         = "my-terraform-state-bucket-test"
     key            = "terraform/state/terraform.tfstate"
-    region         = "us-west-1"
+    region         = "us-east-1" # Исправлено на правильный регион
     dynamodb_table = "terraform-lock-table"
     encrypt        = true
   }
@@ -165,7 +165,7 @@ variable "database_password" {
 variable "ssh_private_key" {
   type        = string
   description = "SSH private key used for deployments"
-  default     = "${env.SSH_PRIVATE_KEY}"
+  # Значение передавайте через TF_VAR_ssh_private_key
 }
 
 output "ec2_public_ip" {

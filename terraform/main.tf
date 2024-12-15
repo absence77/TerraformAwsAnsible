@@ -2,16 +2,10 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# S3 bucket for Terraform state
-resource "aws_s3_bucket" "terraform_state" {
-  bucket = "my-terraform-state-bucket-test"
-  acl    = "private"
-}
-
 
 terraform {
   backend "s3" {
-    bucket         = "my-terraform-state-bucket-test"
+    bucket         = "terraform-tfstate-file-test"
     key            = "terraform.tfstate" # Path in the bucket
     region         = "us-east-1"
     encrypt        = true

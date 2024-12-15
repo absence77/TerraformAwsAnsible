@@ -2,6 +2,17 @@ provider "aws" {
   region = "us-west-2"
 }
 
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state-bucket-test"      # Имя вашего S3 бакета
+    key            = "terraform/state/default.tfstate"    # Путь для хранения файла состояния
+    region         = "us-west-2"                          # Регион, в котором находится S3 бакет
+    dynamodb_table = "terraform-lock-table"               # DynamoDB таблица для блокировок
+    encrypt        = true                                 # Включить шифрование состояния
+  }
+}
+
+
 # Генерация случайного суффикса для уникальных имен
 resource "random_string" "bucket_suffix" {
   length  = 8

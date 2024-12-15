@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "us-west-2"
+  region = "us-east-1"
 }
 
 # S3 bucket for Terraform state
@@ -13,7 +13,7 @@ terraform {
   backend "s3" {
     bucket         = "my-terraform-state-bucket-test"
     key            = "terraform.tfstate" # Path in the bucket
-    region         = "us-west-2"
+    region         = "us-east-1"
     encrypt        = true
   }
 }

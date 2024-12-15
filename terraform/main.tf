@@ -2,10 +2,16 @@ provider "aws" {
   region = "us-west-2"
 }
 
+# S3 bucket for Terraform state
+resource "aws_s3_bucket" "terraform_state" {
+  bucket = "my-terraform-state-bucket-test"
+  acl    = "private"
+}
+
 
 terraform {
   backend "s3" {
-    bucket         = aws_s3_bucket.terraform_state.bucket
+    bucket         = "my-terraform-state-bucket-test"
     key            = "terraform.tfstate" # Path in the bucket
     region         = "us-west-2"
     encrypt        = true
@@ -146,12 +152,6 @@ resource "aws_secretsmanager_secret_version" "secret_version" {
 
 resource "random_id" "bucket_id" {
   byte_length = 8
-}
-
-# S3 bucket for Terraform state
-resource "aws_s3_bucket" "terraform_state" {
-  bucket = "my-terraform-state-bucket-test"
-  acl    = "private"
 }
 
 # S3 bucket for Nginx config

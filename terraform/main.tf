@@ -161,26 +161,8 @@ resource "aws_s3_bucket_object" "nginx_config" {
   acl    = "private"
 }
 
-resource "aws_iam_role_policy_attachment" "terraform_state_policy_attachment" {
-  policy_arn = aws_iam_policy.terraform_state_policy.arn
-  role       = aws_iam_role.container_iam_role.name
-}
-
-# Outputs to display after Terraform apply
-output "terraform_state_bucket_name" {
-  value = aws_s3_bucket.terraform_state.bucket
-}
-
-output "terraform_state_bucket_arn" {
-  value = aws_s3_bucket.terraform_state.arn
-}
-
 output "nginx_config_bucket_name" {
   value = aws_s3_bucket.nginx_config_bucket.bucket
-}
-
-output "nginx_config_bucket_arn" {
-  value = aws_s3_bucket.nginx_config_bucket.arn
 }
 
 output "nginx_config_object_key" {

@@ -29,7 +29,7 @@ resource "random_string" "secret_suffix" {
 
 # EC2 instance to host Nginx
 resource "aws_instance" "container_instance" {
-  ami           = "ami-055e3d4f0bbeb5878"  # Use a suitable AMI for EC2 instance
+  ami           = "ami-0453ec754f44f9a4a"  # Use a suitable AMI for EC2 instance
   instance_type = "t3.small"               # Instance type
 
   security_groups = [aws_security_group.container_sg.name]

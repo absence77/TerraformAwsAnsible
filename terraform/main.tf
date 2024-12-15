@@ -161,40 +161,6 @@ resource "aws_s3_bucket_object" "nginx_config" {
   acl    = "private"
 }
 
-# Attach the access policy to the role for Terraform state and locking
-resource "aws_iam_policy" "terraform_state_policy" {
-  name        = "TerraformStateAndLockPolicy"
-  description = "Allow access to S3 for Terraform state and DynamoDB for state locking"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action   = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket"
-        ]
-        Effect   = "Allow"
-        Resource = [
-          "${aws_s3_bucket.terraform_state.arn}",
-          "${aws_s3_bucket.terraform_state.arn}/*"
-        ]
-      },
-      {
-        Action   = [
-          "dynamodb:PutItem",
-          "dynamodb:GetItem",
-          "dynamodb:Query",
-          "dynamodb:DeleteItem"
-        ]
-        Effect   = "Allow"
-        Resource = aws_dynamodb_table.terraform_locks.arn
-      }
-    ]
-  })
-}
-
 resource "aws_iam_role_policy_attachment" "terraform_state_policy_attachment" {
   policy_arn = aws_iam_policy.terraform_state_policy.arn
   role       = aws_iam_role.container_iam_role.name
@@ -207,14 +173,6 @@ output "terraform_state_bucket_name" {
 
 output "terraform_state_bucket_arn" {
   value = aws_s3_bucket.terraform_state.arn
-}
-
-output "terraform_dynamodb_table_name" {
-  value = aws_dynamodb_table.terraform_locks.name
-}
-
-output "terraform_dynamodb_table_arn" {
-  value = aws_dynamodb_table.terraform_locks.arn
 }
 
 output "nginx_config_bucket_name" {

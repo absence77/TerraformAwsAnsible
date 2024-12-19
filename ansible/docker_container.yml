@@ -2,7 +2,7 @@
   hosts: my_servers
   become: true
   vars:
-    mysecret: "{{ lookup('amazon.aws.secretsmanager_secret', 'db_credentials_qw4it1c7', region='us-east-1') }}"
+    mysecret: "{{ lookup('amazon.aws.secretsmanager_secret', 'db_credentials_lyt9qpna', region='us-east-1') }}"
 
 
 

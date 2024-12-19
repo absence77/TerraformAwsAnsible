@@ -69,3 +69,7 @@ jobs:
             git commit -m "Update EC2 DNS and Secrets"
             git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:main
           fi
+      
+      - name: Run Ansible Playbook
+        run: |
+          ansible-playbook -i ansible/inventory.ini ansible/docker_container.yml

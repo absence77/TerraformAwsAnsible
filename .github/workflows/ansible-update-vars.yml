@@ -1,0 +1,71 @@
+name: Update Configuration Files
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ansible/**
+
+permissions:
+  contents: write  # Allow write access for GitHub Actions to push changes
+
+jobs:
+  update-config:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true   # Retain credentials for push
+          fetch-depth: 0              # Fetch full commit history
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Fetch EC2 Public DNS and Update inventory.ini
+        run: |
+          PUBLIC_DNS=$(aws ec2 describe-instances \
+            --query "Reservations[*].Instances[?State.Name=='running'].PublicDnsName" \
+            --output text | head -n 1)
+
+          if [ -z "$PUBLIC_DNS" ]; then
+              echo "No running EC2 instances found!"
+              exit 1
+          fi
+
+          echo "[my_servers]" > ansible/inventory.ini
+          echo "${PUBLIC_DNS} ansible_port=443 ansible_user=ec2-user" >> ansible/inventory.ini
+
+          cat ansible/inventory.ini
+
+      - name: Fetch Secret from AWS Secrets Manager and Update docker_container.yml
+        run: |
+          SECRET_NAME=$(aws secretsmanager list-secrets \
+            --query "SecretList[?starts_with(Name, 'db')].Name" \
+            --output text | head -n 1)
+
+          sed -i "s|mysecret: .*|mysecret: \"{{ lookup('amazon.aws.secretsmanager_secret', '${SECRET_NAME}', region='us-east-1') }}\"|" ansible/docker_container.yml
+
+          cat ansible/docker_container.yml
+
+      - name: Commit and Push Updated Files
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions@github.com"
+
+          git add ansible/inventory.ini ansible/docker_container.yml
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update EC2 DNS and Secrets"
+            git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }} HEAD:main
+          fi

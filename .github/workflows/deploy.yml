@@ -25,6 +25,15 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1  # Укажите ваш регион
 
+    - name: Set up SSH key for Terraform
+      run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > terraform/ssh_key.pub
+
+
+    - name: Set environment variables for database credentials
+      run: |
+        echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> $GITHUB_ENV
+        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+
     - name: Initialize Terraform
       working-directory: ./terraform
       run: terraform init

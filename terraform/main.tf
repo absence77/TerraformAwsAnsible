@@ -27,6 +27,11 @@ resource "random_string" "secret_suffix" {
   numeric = true
 }
 
+variable "ssh_public_key" {
+  description = "SSH public key for access"
+  type        = string
+}
+
 # EC2 instance to host Nginx
 resource "aws_instance" "container_instance" {
   ami           = "ami-0453ec754f44f9a4a"  # Use a suitable AMI for EC2 instance
@@ -42,7 +47,7 @@ resource "aws_instance" "container_instance" {
               yum install -y nginx
               # Set up SSH key for access
               mkdir -p /home/ec2-user/.ssh
-              echo "${SSH_PUBLIC_KEY}" >> /home/ec2-user/.ssh/authorized_keys
+              echo "${var.ssh_public_key}" >> /home/ec2-user/.ssh/authorized_keys
               chmod 600 /home/ec2-user/.ssh/authorized_keys
               chown -R ec2-user:ec2-user /home/ec2-user/.ssh
               # Download Nginx configuration from S3
@@ -139,11 +144,6 @@ variable "db_username" {
 variable "db_password" {
   description = "Database password"
   type        = string
-}
-
-variable "SSH_PUBLIC_KEY" {
-  type        = string
-  description = "The SSH public key for the EC2 instance."
 }
 
 # Ресурс для создания секрета в AWS Secrets Manager

@@ -27,11 +27,6 @@ resource "random_string" "secret_suffix" {
   numeric = true
 }
 
-variable "ssh_public_key" {
-  description = "SSH public key for access"
-  type        = string
-}
-
 # EC2 instance to host Nginx
 resource "aws_instance" "container_instance" {
   ami           = "ami-0453ec754f44f9a4a"  # Use a suitable AMI for EC2 instance
@@ -47,7 +42,7 @@ resource "aws_instance" "container_instance" {
               yum install -y nginx
               # Set up SSH key for access
               mkdir -p /home/ec2-user/.ssh
-              echo "${var.ssh_public_key}" >> /home/ec2-user/.ssh/authorized_keys
+              echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDfsTTL6TCKHvRu22IKMPE7MMl8axo9N2U6FNbivFC547DNwrVetWmeWRwYnvee2yNJGK1hbHZTWRT91cBfC40GQzJDRyun9uii8NTSI62U4VgmjjAk4E+pWjZJH3ePTrbaQL2X+LG0NkV+29QHmKvEu9FrtucCcnn3jN0joTwJt27I9+zYs56d7R8VZpYEYXnE6gqbYnX9XResxOodV2ihfrtMGWOr1/6pbBtR7OkY4AiLkyPzzmuGej2hydEMxdNnHiIPFViMMtBxANVtfFDRC3YCG6gGEn1ePguR/vBSNXc0078RJ9xOayH5fNinqLm365OSSZ2oowM5VtRpCWqHlhFNsrIW6ZjkJUrAotDBwUtfkN8iyEa2JSlumIS2+TRidaCx7MTUG4hEuLflZcz2CyAPegbIazy/8V+uLv5u+sd24JljFjjnfnpv+K80ezJWKzqlZjFN2t/xB8KbMDrL5lBFxxwr2o2dMYJn+uTeqW0HJI1zf17HKhcYBZgM1KhyiGxa2nq9NIzEjVwdI7bMJ4ER9sxnZmuItnVGx7G/ncJxxHpPCCjK48hSHyb9d11SPROBwg8QHoK+4Ba4tNldXky+5NbDrJEYFypiWYBkxnxgJoEU9Bj8LKnD4NgF0Bgjjo7BcLXsUlYVIJuZc1E/Ef1JNC/ZUQ/ZPgwZ6qW8Mw== ahmad@DESKTOP-BVAMA07" >> /home/ec2-user/.ssh/authorized_keys
               chmod 600 /home/ec2-user/.ssh/authorized_keys
               chown -R ec2-user:ec2-user /home/ec2-user/.ssh
               # Download Nginx configuration from S3
@@ -134,33 +129,20 @@ resource "aws_iam_role_policy_attachment" "access_policy_attachment" {
   role       = aws_iam_role.container_iam_role.name
 }
 
-# Переменная для имени пользователя базы данных
-variable "db_username" {
-  description = "Database username"
-  type        = string
-}
-
-# Переменная для пароля базы данных
-variable "db_password" {
-  description = "Database password"
-  type        = string
-}
-
-# Ресурс для создания секрета в AWS Secrets Manager
+# Store environment variables in Secrets Manager
 resource "aws_secretsmanager_secret" "db_credentials" {
   name                    = "db_credentials_${random_string.secret_suffix.id}"
   recovery_window_in_days = 0
 }
 
-# Версия секрета с данными из переменных
+# Secrets Manager secret version
 resource "aws_secretsmanager_secret_version" "secret_version" {
   secret_id     = aws_secretsmanager_secret.db_credentials.id
   secret_string = jsonencode({
-    DATABASE_USERNAME = var.db_username
-    DATABASE_PASSWORD = var.db_password
+    DATABASE_USERNAME = "myuser"
+    DATABASE_PASSWORD = "mypassword"
   })
 }
-
 
 resource "random_id" "bucket_id" {
   byte_length = 8

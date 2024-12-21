@@ -141,6 +141,11 @@ variable "db_password" {
   type        = string
 }
 
+variable "SSH_PUBLIC_KEY" {
+  type        = string
+  description = "The SSH public key for the EC2 instance."
+}
+
 # Ресурс для создания секрета в AWS Secrets Manager
 resource "aws_secretsmanager_secret" "db_credentials" {
   name                    = "db_credentials_${random_string.secret_suffix.id}"
